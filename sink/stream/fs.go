@@ -66,6 +66,7 @@ func Stream(ctx context.Context) error {
 		default:
 			data, err := json.Marshal(tweet)
 			if err != nil {
+				// maybe log this, 'continue' the loop and move on.
 				return err
 			}
 			prod.ProduceChannel() <- &kafka.Message{

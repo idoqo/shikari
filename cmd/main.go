@@ -18,6 +18,9 @@ func main() {
 	wg.Add(1)
 	go sink.StartStreaming(ctx, wg)
 
+	wg.Add(1)
+	go sink.StartFlushing(ctx, wg)
+
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT)
 	log.Println(fmt.Sprint(<-sig))
