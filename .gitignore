@@ -1,0 +1,7 @@
+junk
+.env
+build/
+
+.idea/
+.vscode/
+
