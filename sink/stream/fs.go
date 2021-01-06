@@ -5,18 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"gitlab.com/idoko/shikari/models"
 	"io/ioutil"
 	"log"
 	"time"
 )
-type Tweet struct {
-	TweetId string `json:"id"`
-	Text string `json:"text"`
-}
-
-type SearchHits struct {
-	Data []Tweet
-}
 
 func Stream(ctx context.Context) error {
 	hits, err := loadJson()
@@ -84,9 +77,9 @@ func Stream(ctx context.Context) error {
 	return nil
 }
 
-func loadJson() (SearchHits, error) {
+func loadJson() (models.SearchHits, error) {
 	content, err := ioutil.ReadFile("junk/results1.json")
-	hits := SearchHits{}
+	hits := models.SearchHits{}
 
 	if err != nil {
 		return hits, err

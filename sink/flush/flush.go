@@ -5,11 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
-	"gitlab.com/idoko/shikari/sink/stream"
+	"gitlab.com/idoko/shikari/db"
+	"gitlab.com/idoko/shikari/models"
 	"log"
 )
 
-func Flush(ctx context.Context) error {
+var dbInstance db.Database
+
+func Flush(ctx context.Context, database db.Database) error {
+	dbInstance = database
 	configMap := &kafka.ConfigMap{
 		"bootstrap.servers": "localhost:29092",
 		"group.id": "shikari-consumers",
@@ -41,15 +45,10 @@ func Flush(ctx context.Context) error {
 
 			switch e := ev.(type) {
 			case *kafka.Message:
-				var tweet stream.Tweet
-				err := json.Unmarshal(e.Value, &tweet)
+				err := processMessage(e)
 				if err != nil {
 					log.Println("error while converting message to tweet: ", err.Error())
 					continue
-				}
-				log.Println(tweet.TweetId)
-				if e.Headers != nil {
-					fmt.Printf("%% Headers: %v\n", e.Headers)
 				}
 			case kafka.Error:
 				// errors should be informational and the client will try to
@@ -65,6 +64,24 @@ func Flush(ctx context.Context) error {
 	}
 	log.Println("closing consumer")
 	cnsm.Close()
+	return nil
+}
+
+func processMessage(msg *kafka.Message) error {
+	var tweet models.Tweet
+	err := json.Unmarshal(msg.Value, &tweet)
+	if err != nil {
+		return err
+	}
+
+	err = dbInstance.SaveTweet(&tweet)
+	if err != nil {
+		return err
+	}
+	log.Println(fmt.Sprintf("%d -> %s", tweet.ID, tweet.TweetId))
+	if msg.Headers != nil {
+		fmt.Printf("%% Headers: %v\n", msg.Headers)
+	}
 	return nil
 }
 

@@ -6,5 +6,7 @@ PG_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POST
 env:
 	@env
 
-migrate:
+migrate-up:
 	@migrate -database ${PG_URL} -path db/migrations up
+migrate-down:
+	@migrate -database ${PG_URL} -path db/migrations down
