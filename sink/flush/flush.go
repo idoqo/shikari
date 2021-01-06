@@ -2,8 +2,10 @@ package flush
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"gitlab.com/idoko/shikari/sink/stream"
 	"log"
 )
 
@@ -39,7 +41,13 @@ func Flush(ctx context.Context) error {
 
 			switch e := ev.(type) {
 			case *kafka.Message:
-				fmt.Printf("%% Message on %s:\n%s\n", e.TopicPartition, string(e.Value))
+				var tweet stream.Tweet
+				err := json.Unmarshal(e.Value, &tweet)
+				if err != nil {
+					log.Println("error while converting message to tweet: ", err.Error())
+					continue
+				}
+				log.Println(tweet.TweetId)
 				if e.Headers != nil {
 					fmt.Printf("%% Headers: %v\n", e.Headers)
 				}
