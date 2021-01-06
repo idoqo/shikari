@@ -60,13 +60,6 @@ func Stream(ctx context.Context) error {
 			// maybe log this, 'continue' the loop and move on.
 			return err
 		}
-		prod.ProduceChannel() <- &kafka.Message{
-			TopicPartition: kafka.TopicPartition{
-				Topic:     &topic,
-				Partition: kafka.PartitionAny,
-			},
-			Value: data,
-		}
 		// the select loop makes it possible to cancel execution without
 		// waiting for all the 'tweets' currently in memory to be streamed i.e
 		// when a ctrl+c is received (or ctx is cancelled), it streams the current tweet to kafka and halt.
@@ -76,6 +69,13 @@ func Stream(ctx context.Context) error {
 			log.Println("quitting streamer hohoho")
 			return nil
 		default:
+			prod.Produce(
+				&kafka.Message{
+					TopicPartition: kafka.TopicPartition{
+						Topic: &topic, Partition: kafka.PartitionAny,
+					},
+			Value: data,
+			}, nil)
 			time.Sleep(5 * time.Second)
 		}
 	}
