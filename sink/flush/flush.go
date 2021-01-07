@@ -78,7 +78,7 @@ func processMessage(msg *kafka.Message) error {
 	if err != nil {
 		return err
 	}
-	log.Println(fmt.Sprintf("%d -> %s", tweet.ID, tweet.TweetId))
+	log.Println(fmt.Sprintf("Saved tweet: %s", tweet.TweetId))
 	if msg.Headers != nil {
 		fmt.Printf("%% Headers: %v\n", msg.Headers)
 	}

@@ -25,7 +25,7 @@ func main() {
 		log.Fatal(database.Error)
 		return
 	}
-	
+
 	wg.Add(1)
 	go sink.StartFlushing(ctx, wg, database)
 

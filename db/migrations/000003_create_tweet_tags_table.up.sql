@@ -1,7 +1,6 @@
 CREATE TABLE IF NOT EXISTS tweet_tags(
     id SERIAL PRIMARY KEY,
-    shikari_tweet_id INTEGER NOT NULL REFERENCES tweets(id),
-    twitter_tweet_id VARCHAR(20) NOT NULL,
+    twitter_tweet_id VARCHAR(20) NOT NULL REFERENCES tweets(tweet_id),
     tag_id INTEGER NOT NULL REFERENCES tags(id)
 );
 

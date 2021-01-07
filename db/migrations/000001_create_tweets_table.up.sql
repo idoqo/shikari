@@ -1,7 +1,6 @@
 CREATE TABLE IF NOT EXISTS tweets(
-    id SERIAL PRIMARY KEY,
-    tweet_id VARCHAR(20) UNIQUE NOT NULL,
-    tweet_text VARCHAR(300) NOT NULL,
+    tweet_id VARCHAR(20) PRIMARY KEY,
+    tweet_text TEXT NOT NULL,
     tweet_timestamp TIMESTAMP WITH TIME ZONE,
     /*
      using `saved_at` to represent when we saved the tweet,

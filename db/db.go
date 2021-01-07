@@ -27,15 +27,13 @@ func Connect(host, username, password, database, sslmode string, port int) Datab
 }
 
 func (db Database) SaveTweet(tweet *models.Tweet) error {
-	var id int
 	var savedAt string
 
-	query := "INSERT INTO tweets (tweet_id, tweet_text, tweet_timestamp) VALUES ($1, $2, $3) RETURNING id, saved_at"
-	err := db.Conn.QueryRow(query, tweet.TweetId, tweet.Text, tweet.CreatedAt).Scan(&id, &savedAt)
+	query := "INSERT INTO tweets (tweet_id, tweet_text, tweet_timestamp) VALUES ($1, $2, $3) RETURNING saved_at"
+	err := db.Conn.QueryRow(query, tweet.TweetId, tweet.Text, tweet.CreatedAt).Scan(&savedAt)
 	if err != nil {
 		return err
 	}
-	tweet.ID = id
 	tweet.SavedAt = savedAt
 	return nil
 }

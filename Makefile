@@ -10,3 +10,9 @@ migrate-up:
 	@migrate -database ${PG_URL} -path db/migrations up
 migrate-down:
 	@migrate -database ${PG_URL} -path db/migrations down
+
+test:
+	@go test ./...
+
+dev:
+	@go run ./cmd/main.go
