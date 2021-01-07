@@ -12,16 +12,10 @@ import (
 
 var dbInstance db.Database
 
-func Flush(ctx context.Context, database db.Database) error {
-	dbInstance = database
-	configMap := &kafka.ConfigMap{
-		"bootstrap.servers": "localhost:29092",
-		"group.id": "shikari-consumers",
-		"session.timeout.ms": 6000,
-		"auto.offset.reset": "earliest",
+func Flush(ctx context.Context, cfg Config) error {
+	dbInstance = cfg.DB
 
-	}
-	cnsm, err := kafka.NewConsumer(configMap)
+	cnsm, err := kafka.NewConsumer(cfg.ConsumerConfigMap)
 	if err != nil {
 		return err
 	}

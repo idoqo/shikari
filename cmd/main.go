@@ -13,21 +13,36 @@ import (
 	"syscall"
 )
 
+func configure(db db.Database) (Config, error){
+	cfg := NewConfig(
+		ConfigureFlusher("localhost:29092", 6000, "shikari-consumers", db),
+		// load data from source every minute.
+		ConfigureStreamer("localhost:29092", 60),
+	)
+
+	return cfg, nil
+}
+
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
-	wg := &sync.WaitGroup{}
-
-	wg.Add(1)
-	go sink.StartStreaming(ctx, wg)
-
 	database := openDbConnection()
 	if database.Error != nil {
 		log.Fatal(database.Error)
 		return
 	}
+	cfg, err := configure(database)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	wg := &sync.WaitGroup{}
 
 	wg.Add(1)
-	go sink.StartFlushing(ctx, wg, database)
+	go sink.StartStreaming(ctx, wg, cfg.StreamerConfig)
+
+	wg.Add(1)
+	go sink.StartFlushing(ctx, wg, cfg.FlusherConfig)
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT)

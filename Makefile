@@ -15,4 +15,4 @@ test:
 	@go test ./...
 
 dev:
-	@go run ./cmd/main.go
+	@go build -o build/shikari ./cmd/ && ./build/shikari

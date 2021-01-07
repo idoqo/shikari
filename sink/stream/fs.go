@@ -11,15 +11,13 @@ import (
 	"time"
 )
 
-func Stream(ctx context.Context) error {
+func Stream(ctx context.Context, config Config) error {
 	hits, err := loadJson()
 	if err != nil {
 		return err
 	}
 
-	prod, err := kafka.NewProducer(&kafka.ConfigMap{
-		"bootstrap.servers": "localhost:29092",
-	})
+	prod, err := kafka.NewProducer(config.ProducerConfigMap)
 	if err != nil {
 		return err
 	}
@@ -69,7 +67,7 @@ func Stream(ctx context.Context) error {
 					},
 			Value: data,
 			}, nil)
-			time.Sleep(5 * time.Second)
+			time.Sleep(1 * time.Second)
 		}
 	}
 	_ = <-doneChan

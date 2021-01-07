@@ -2,7 +2,6 @@ package sink
 
 import (
 	"context"
-	"gitlab.com/idoko/shikari/db"
 	"gitlab.com/idoko/shikari/sink/flush"
 	"gitlab.com/idoko/shikari/sink/stream"
 	"log"
@@ -10,10 +9,7 @@ import (
 	"time"
 )
 
-type StreamConfig struct {
-}
-
-func StartStreaming(ctx context.Context, wg *sync.WaitGroup) {
+func StartStreaming(ctx context.Context, wg *sync.WaitGroup, config stream.Config) {
 	t := heartbeat(ctx, 30 * time.Second)
 
 	for {
@@ -23,7 +19,7 @@ func StartStreaming(ctx context.Context, wg *sync.WaitGroup) {
 			wg.Done()
 			return
 		case <-t:
-			err := stream.Stream(ctx)
+			err := stream.Stream(ctx, config)
 			if err != nil {
 				log.Println(err)
 			}
@@ -59,7 +55,7 @@ func heartbeat(ctx context.Context, interval time.Duration) <- chan time.Time {
 	return notifier
 }
 
-func StartFlushing(ctx context.Context, wg *sync.WaitGroup, database db.Database) {
+func StartFlushing(ctx context.Context, wg *sync.WaitGroup, config flush.Config) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -67,7 +63,7 @@ func StartFlushing(ctx context.Context, wg *sync.WaitGroup, database db.Database
 			wg.Done()
 			return
 		default:
-			err := flush.Flush(ctx, database)
+			err := flush.Flush(ctx, config)
 			if err != nil {
 				log.Println(err)
 			}
