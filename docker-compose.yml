@@ -13,7 +13,7 @@ services:
     - "5432:5432"
     volumes:
       - type: volume
-        source: ./tmp/db
+        source: data
         target: /var/lib/postgresql/data
         volume:
           nocopy: true

@@ -1,0 +1,1 @@
+INSERT INTO tags(tag) VALUES ('javascript'), ('cpp'), ('go'), ('php'), ('docker');
