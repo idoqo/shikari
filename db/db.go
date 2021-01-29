@@ -37,3 +37,9 @@ func (db Database) SaveTweet(tweet *models.Tweet) error {
 	tweet.SavedAt = savedAt
 	return nil
 }
+
+func (db Database) SaveTweetTag(tag *models.Tag, tweetId string) error {
+	query := "INSERT INTO tweet_tags(twitter_tweet_id, tag_id) VALUES($1, $2)"
+	_, err := db.Conn.Exec(query, tweetId, tag.ID)
+	return err
+}

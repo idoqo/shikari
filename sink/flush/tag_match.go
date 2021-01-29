@@ -1,6 +1,9 @@
 package flush
 
-import "strings"
+import (
+	"gitlab.com/idoko/shikari/models"
+	"strings"
+)
 
 var (
 	// checkers is a map where the key is a stack e.g php, backend, mysql, etc.
@@ -25,23 +28,27 @@ var (
 		},
 	}
 
-	stacks = []string {"php", "javascript"} // load this from db?
+	stacks = []models.Tag {
+		{1, "javascript"},
+		{2, "cpp"},
+		{3, "go"},
+		{4, "php"},
+		{5, "docker"},
+	}
 )
 
-func extractStacks(tweet string) map[string]bool {
-	matchedStacks := map[string]bool{}
+func extractStacks(tweet string) []models.Tag {
+	var matchedStacks []models.Tag
+
 	for _, stack := range stacks {
-		if cond, ok := checkers[stack]; ok {
-			if found, synonyms := cond(tweet); found {
-				matchedStacks[stack] = true
-				for _, alt := range synonyms {
-					matchedStacks[alt] = true
-				}
+		if cond, ok := checkers[stack.Tag]; ok {
+			if found, _ := cond(tweet); found {
+				matchedStacks = append(matchedStacks, stack)
 			}
 		} else {
 			// we don't have a way to check for this stack yet, so do a straight up string match
-			if strings.Contains(tweet, stack) || strings.Contains(tweet, "#"+stack) {
-				matchedStacks[stack] = true
+			if strings.Contains(tweet, stack.Tag) || strings.Contains(tweet, "#"+stack.Tag) {
+				matchedStacks = append(matchedStacks, stack)
 			}
 		}
 	}

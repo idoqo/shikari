@@ -67,10 +67,18 @@ func processMessage(msg *kafka.Message) error {
 	if err != nil {
 		return err
 	}
-
+	tags := extractStacks(tweet.Text)
 	err = dbInstance.SaveTweet(&tweet)
 	if err != nil {
 		return err
+	}
+	if len(tags) > 0 {
+		for _, tag := range tags {
+			err := dbInstance.SaveTweetTag(&tag, tweet.TweetId)
+			if err != nil {
+				log.Println(err)
+			}
+		}
 	}
 	log.Println(fmt.Sprintf("Saved tweet: %s", tweet.TweetId))
 	if msg.Headers != nil {
