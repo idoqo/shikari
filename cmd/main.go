@@ -8,7 +8,7 @@ import (
 	"gitlab.com/idoko/shikari/api/handler"
 	"gitlab.com/idoko/shikari/db"
 	"gitlab.com/idoko/shikari/sink"
-	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -47,17 +47,28 @@ func main() {
 	r := gin.Default()
 	rg := r.Group(apiVersion)
 	h.Register(rg)
-	r.Run(serverAddr)
+	srv := &http.Server{
+		Addr: serverAddr,
+		Handler: r,
+	}
+	wg.Add(1)
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Err(err).Msg("could not start api server")
+			os.Exit(1)
+		}
+	}()
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT)
-	log.Println(fmt.Sprint(<-sig))
-	log.Println("Stopping Shikari...")
-
+	logger.Print(fmt.Sprint(<-sig))
+	if err := srv.Shutdown(ctx); err != nil {
+		logger.Err(err).Msg("forcefully quitting server.")
+	}
+	logger.Print("Stopping Shikari...")
 	cancel()
 	wg.Wait()
 }
-
 
 func setupKafka(db db.Database) (Config, error){
 	var (
