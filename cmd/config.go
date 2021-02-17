@@ -6,6 +6,7 @@ import (
 	"gitlab.com/idoko/shikari/sink/flush"
 	"gitlab.com/idoko/shikari/sink/stream"
 	"log"
+	"time"
 )
 
 type Config struct {
@@ -43,7 +44,7 @@ func ConfigureFlusher(bootstrapServers string, timeOut int, groupId string, db d
 	}
 }
 
-func ConfigureStreamer(bootstrapServers string, heartbeat int) ConfigOption {
+func ConfigureStreamer(bootstrapServers string, heartbeat time.Duration) ConfigOption {
 	return func(cfg *Config) {
 		configMap := &kafka.ConfigMap{
 			"bootstrap.servers": bootstrapServers,

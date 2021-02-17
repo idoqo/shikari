@@ -3,6 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
+	"gitlab.com/idoko/shikari/api/handler"
 	"gitlab.com/idoko/shikari/db"
 	"gitlab.com/idoko/shikari/sink"
 	"log"
@@ -11,28 +14,24 @@ import (
 	"strconv"
 	"sync"
 	"syscall"
+	"time"
 )
 
-func configure(db db.Database) (Config, error){
-	cfg := NewConfig(
-		ConfigureFlusher("localhost:29092", 6000, "shikari-consumers", db),
-		// load data from source every minute.
-		ConfigureStreamer("localhost:29092", 60),
-	)
-
-	return cfg, nil
-}
+var (
+	apiVersion = "/v1"
+	serverAddr = ":8080"
+)
 
 func main() {
+	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
 	database := openDbConnection()
 	if database.Error != nil {
-		log.Fatal(database.Error)
-		return
+		logger.Err(database.Error).Msg("could not connect to database")
+		os.Exit(1)
 	}
-	cfg, err := configure(database)
+	cfg, err := setupKafka(database)
 	if err != nil {
-		log.Fatal(err)
-		return
+		logger.Err(err).Msg("failed to configure kafka clients")
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -44,6 +43,12 @@ func main() {
 	wg.Add(1)
 	go sink.StartFlushing(ctx, wg, cfg.FlusherConfig)
 
+	h := handler.New(database, logger)
+	r := gin.Default()
+	rg := r.Group(apiVersion)
+	h.Register(rg)
+	r.Run(serverAddr)
+
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT)
 	log.Println(fmt.Sprint(<-sig))
@@ -51,6 +56,22 @@ func main() {
 
 	cancel()
 	wg.Wait()
+}
+
+
+func setupKafka(db db.Database) (Config, error){
+	var (
+		heartbeat = 60 * time.Second
+		timeout = 6000
+		groupId = "shikari-consumers"
+		bootstrapServers = os.Getenv("KAFKA_BOOTSTRAP_SERVERS")
+	)
+	cfg := NewConfig(
+		ConfigureFlusher(bootstrapServers, timeout, groupId, db),
+		ConfigureStreamer(bootstrapServers, heartbeat),
+	)
+
+	return cfg, nil
 }
 
 func openDbConnection() db.Database {

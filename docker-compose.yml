@@ -4,7 +4,7 @@ version: "3"
 services:
   postgres:
     image: postgres
-    restart: always
+    restart: unless-stopped
     hostname: pgdatabase
     container_name: shikari_pgdatabase
     env_file:
@@ -17,6 +17,18 @@ services:
         target: /var/lib/postgresql/data
         volume:
           nocopy: true
+
+  api:
+    build:
+      context: .
+    hostname: api
+    container_name: shikari_api
+    env_file:
+      - .env
+    ports:
+    - "8080:8080"
+    depends_on:
+      - postgres
 
   zookeeper:
     image: confluentinc/cp-zookeeper:6.0.0
@@ -40,7 +52,7 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092,PLAINTEXT_HOST://broker:29092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TOOLS_LOG4J_LOGLEVEL: ERROR
