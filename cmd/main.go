@@ -6,9 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 	"gitlab.com/idoko/shikari/api/handler"
+	"gitlab.com/idoko/shikari/api/tokens"
 	"gitlab.com/idoko/shikari/db"
 	"gitlab.com/idoko/shikari/sink"
-	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -43,28 +43,16 @@ func main() {
 	wg.Add(1)
 	go sink.StartFlushing(ctx, wg, cfg.FlusherConfig)
 
-	h := handler.New(database, logger)
+	jwt := tokens.JWT{}
+	h := handler.New(database, logger, jwt)
 	r := gin.Default()
 	rg := r.Group(apiVersion)
 	h.Register(rg)
-	srv := &http.Server{
-		Addr: serverAddr,
-		Handler: r,
-	}
-	wg.Add(1)
-	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Err(err).Msg("could not start api server")
-			os.Exit(1)
-		}
-	}()
+	r.Run(serverAddr)
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT)
 	logger.Print(fmt.Sprint(<-sig))
-	if err := srv.Shutdown(ctx); err != nil {
-		logger.Err(err).Msg("forcefully quitting server.")
-	}
 	logger.Print("Stopping Shikari...")
 	cancel()
 	wg.Wait()

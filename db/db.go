@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"gitlab.com/idoko/shikari/models"
 	"log"
@@ -9,10 +10,14 @@ import (
 	_ "github.com/lib/pq"
 )
 
+var (
+	ErrNoRecord = errors.New("no matching row was found")
+)
 type Database struct {
 	Conn *sql.DB
 	Error error
 }
+
 func Connect(host, username, password, database, sslmode string, port int) Database {
 	db := Database{}
 	dsn := fmt.Sprintf("host=%s port = %d user=%s password=%s dbname=%s sslmode=%s",
