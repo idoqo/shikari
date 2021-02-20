@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 	"gitlab.com/idoko/shikari/api/handler"
-	"gitlab.com/idoko/shikari/api/tokens"
+	"gitlab.com/idoko/shikari/api/guard"
 	"gitlab.com/idoko/shikari/db"
 	"gitlab.com/idoko/shikari/sink"
 	"os"
@@ -43,8 +43,12 @@ func main() {
 	wg.Add(1)
 	go sink.StartFlushing(ctx, wg, cfg.FlusherConfig)
 
-	jwt := tokens.JWT{}
-	h := handler.New(database, logger, jwt)
+	authGuard, err := guard.Configure(os.Getenv("JWT_SECRET"), 15 * time.Minute)
+	if err != nil {
+		logger.Err(err).Msg("failed to set configure JWT")
+		os.Exit(1)
+	}
+	h := handler.New(database, logger, authGuard)
 	r := gin.Default()
 	rg := r.Group(apiVersion)
 	h.Register(rg)

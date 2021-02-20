@@ -1,4 +1,4 @@
-package tokens
+package guard
 
 import (
 	"gitlab.com/idoko/shikari/models"
@@ -6,7 +6,7 @@ import (
 )
 
 func TestGenerateToken(t *testing.T) {
-	jwt := JWT{}
+	jwt := Guard{}
 	user := models.User{
 		ID: 1,
 		Email: "test@test.com",

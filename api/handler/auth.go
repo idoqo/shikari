@@ -9,6 +9,9 @@ import (
 	"net/http"
 )
 
+var (
+	errIncorrectCredentials = "email and/or password is incorrect"
+)
 func (h *Handler) signup(c *gin.Context) {
 	var userReq models.UserRequest
 	var err error
@@ -68,11 +71,11 @@ func (h *Handler) login(c *gin.Context) {
 	}
 	user, err := h.db.GetUserByEmail(userReq.Email)
 	if err != nil {
+		h.logger.Err(err).Msg("could not log in user")
 		if err == db.ErrNoRecord {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("no account with provided email")})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": errIncorrectCredentials})
 			return
 		}
-		h.logger.Err(err).Msg("could not log in user")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("could not sign in at the moment")})
 		return
 	}
@@ -80,7 +83,7 @@ func (h *Handler) login(c *gin.Context) {
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(userReq.Password)); err != nil {
 		switch err {
 		case bcrypt.ErrMismatchedHashAndPassword:
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "password is incorrect"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": errIncorrectCredentials})
 			break
 		default:
 			h.logger.Err(err).Msg("could not validate user password")

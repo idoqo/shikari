@@ -3,17 +3,17 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
-	"gitlab.com/idoko/shikari/api/tokens"
+	"gitlab.com/idoko/shikari/api/guard"
 	"gitlab.com/idoko/shikari/db"
 )
 
 type Handler struct {
 	db     db.Database
 	logger zerolog.Logger
-	jwt    tokens.JWT
+	jwt    guard.Guard
 }
 
-func New(db db.Database, logger zerolog.Logger, jwt tokens.JWT) *Handler {
+func New(db db.Database, logger zerolog.Logger, jwt guard.Guard) *Handler {
 	return &Handler{
 		db: db,
 		logger: logger,
